@@ -76,7 +76,6 @@ function fetchVAMArtById(id) {
       if (!artwork) {
         throw new Error("Artwork not found in V&A");
       }
-
       return {
         id: artwork.systemNumber || "Unknown",
         title: artwork.title || artwork.titles[0].title || "Untitled",
@@ -84,7 +83,7 @@ function fetchVAMArtById(id) {
           artwork.artist ||
           artwork.artistMakerPerson?.[0]?.name?.text ||
           "Unknown",
-        img_url: artwork.images?._primary_thumbnail || "",
+        img_url: image?._primary_thumbnail || "",
         medium: artwork.materials || "Unknown",
         techniques: artwork.techniques || "Unknown",
         categories: artwork.categories || "Unknown",

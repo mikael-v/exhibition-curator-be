@@ -34,19 +34,19 @@ const fetchArtworks = (req, res) => {
         const vamRecords = vamData.records;
 
         const cmaData = cmaResponse.data;
-        const cmaRecords = cmaData.data; 
+        const cmaRecords = cmaData.data;
 
         const combinedRecords = [
-          ...vamRecords.slice(0, 10), 
-          ...cmaRecords.slice(0, 10), 
+          ...vamRecords.slice(0, limit),
+          ...cmaRecords.slice(0, limit),
         ];
 
         res.json({
           records: combinedRecords,
           currentPage: page,
           totalPages: Math.max(
-            vamData.info.pages,
-            Math.ceil(cmaData.total / limit)
+            Math.ceil(vamRecords.length / limit),
+            Math.ceil(cmaRecords.length / limit)
           ),
         });
       })

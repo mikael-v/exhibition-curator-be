@@ -39,13 +39,20 @@ const fetchArtworks = (req, res) => {
         const totalVamPages = vamData.pages || 0;
         const totalCmaPages = Math.ceil(cmaData.info.total / limit);
 
-
         const totalPages = Math.max(totalVamPages, totalCmaPages);
 
-        const combinedRecords = [
-          ...vamRecords.slice(0, limit),
-          ...cmaRecords.slice(0, limit),
-        ];
+        const combinedRecords = [...vamRecords, ...cmaRecords];
+        const startIndex = (page - 1) * limit;
+        const paginatedRecords = combinedRecords.slice(
+          startIndex,
+          startIndex + limit
+        );
+
+        res.json({
+          records: paginatedRecords,
+          currentPage: page,
+          totalPages: totalPages,
+        });
 
         res.json({
           records: combinedRecords,

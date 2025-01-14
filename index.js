@@ -1,6 +1,8 @@
 const express = require("express");
 const app = express();
 app.use(express.json());
+const cors = require("cors");
+app.use(cors());
 
 const { fetchArtworkById } = require("./api/individualArtwork.js");
 const { fetchArtworks } = require("./api/allArtwork.js");

@@ -10,7 +10,9 @@ const { getAPIs } = require("./api/endpoints.js");
 app.get("/", getAPIs);
 app.get("/api", getAPIs);
 app.get("/api/artwork", fetchArtworks);
+app.get("/api/artworks", fetchArtworks);
 app.get("/api/artwork/:id", fetchArtworkById);
+app.get("/api/artworks/:id", fetchArtworkById);
 
 app.use((err, req, res, next) => {
   if (err.code) {

@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const fetchArtworks = (req, res) => {
+const fetchArtworks = async (req, res) => {
   let page = parseInt(req.query.page) || 1;
   let limit = parseInt(req.query.limit) || 10;
 
@@ -9,56 +9,49 @@ const fetchArtworks = (req, res) => {
   }
 
   const vamApiUrl = "https://api.vam.ac.uk/v2/objects/search";
-
   const cmaApiUrl = "https://openaccess-api.clevelandart.org/api/artworks";
 
   const vamParams = {
-    page: page,
-    page_size: limit,
-    q: "art",
+    page_size: 100, 
+    q: "art", 
   };
 
   const cmaParams = {
-    page: page,
-    limit: limit,
+    limit: 100, 
   };
 
-  axios
-    .all([
-      axios.get(vamApiUrl, { params: vamParams }),
-      axios.get(cmaApiUrl, { params: cmaParams }),
-    ])
-    .then(
-      axios.spread((vamResponse, cmaResponse) => {
-        const vamData = vamResponse.data;
-        const vamRecords = vamData.records;
+  try {
+    const vamResponse = await axios.get(vamApiUrl, { params: vamParams });
+    const vamRecords = vamResponse.data.records || [];
 
-        const cmaData = cmaResponse.data;
-        const cmaRecords = cmaData.data;
+    const cmaResponse = await axios.get(cmaApiUrl, { params: cmaParams });
+    const cmaRecords = cmaResponse.data.data || [];
 
-        const totalVamPages = vamData.pages || 0;
-        const totalCmaPages = Math.ceil(cmaData.info.total / limit);
+    const combinedRecords = [...vamRecords, ...cmaRecords];
+    const totalRecords = combinedRecords.length;
+    const totalCombinedPages = Math.ceil(totalRecords / limit);
 
-        const totalPages = Math.max(totalVamPages, totalCmaPages);
+    const startIndex = (page - 1) * limit;
 
-        const combinedRecords = [...vamRecords, ...cmaRecords];
-        const startIndex = (page - 1) * limit;
-        const paginatedRecords = combinedRecords.slice(
-          startIndex,
-          startIndex + limit
-        );
+    if (startIndex >= totalRecords) {
+      return res.status(404).json({ msg: "Page number exceeds total pages." });
+    }
 
-        res.json({
-          records: paginatedRecords,
-          currentPage: page,
-          totalPages: totalPages,
-        });
-      })
-    )
-    .catch((error) => {
-      console.error("Error fetching data from APIs:", error.message);
-      res.status(500).json({ error: "Failed to fetch data" });
+    const paginatedRecords = combinedRecords.slice(
+      startIndex,
+      startIndex + limit
+    );
+
+    res.json({
+      records: paginatedRecords,
+      currentPage: page,
+      totalPages: totalCombinedPages,
+      totalRecords: totalRecords,
     });
+  } catch (error) {
+    console.error("Error fetching data from APIs:", error.message);
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
 };
 
 module.exports = { fetchArtworks };

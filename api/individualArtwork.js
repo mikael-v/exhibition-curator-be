@@ -81,8 +81,10 @@ function fetchVAMArtById(id) {
         id: artwork.systemNumber || "Unknown",
         title: artwork.title || artwork.titles[0].title || "Untitled",
         artist:
-          artwork.artist || artwork.artistMakerPerson[0].name.text || "Unknown",
-        img_url: image._primary_thumbnail || "",
+          artwork.artist ||
+          artwork.artistMakerPerson?.[0]?.name?.text ||
+          "Unknown",
+        img_url: artwork.images?._primary_thumbnail || "",
         medium: artwork.materials || "Unknown",
         techniques: artwork.techniques || "Unknown",
         categories: artwork.categories || "Unknown",

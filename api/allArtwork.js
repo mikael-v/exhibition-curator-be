@@ -53,12 +53,6 @@ const fetchArtworks = (req, res) => {
           currentPage: page,
           totalPages: totalPages,
         });
-
-        res.json({
-          records: combinedRecords,
-          currentPage: page,
-          totalPages: totalPages,
-        });
       })
     )
     .catch((error) => {

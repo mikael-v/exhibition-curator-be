@@ -45,15 +45,13 @@ function fetchClevelandArtById(id) {
       return {
         id: artwork.id || "Unknown",
         title: artwork.title || "Untitled",
-        artist: artwork.artists_tags
-          ? artwork.artists_tags.join(", ")
-          : "Unknown",
+        summary: artwork.description || "No summary available",
+        type: artwork.type || "Unknown",
         img_url: artwork.images?.web?.url || "",
         medium: artwork.medium || "Unknown",
         dimensions: artwork.measurements || "Unknown",
         technique: artwork.technique || "Unknown",
         categories: artwork.categories,
-        type: artwork.type,
         artist: artwork.creators[0].description || "Unknown",
         source: "Cleveland Museum of Art",
       };
@@ -76,13 +74,17 @@ function fetchVAMArtById(id) {
       if (!artwork) {
         throw new Error("Artwork not found in V&A");
       }
+
+      console.log(artwork);
       return {
         id: artwork.systemNumber || "Unknown",
-        title: artwork.title || artwork.titles[0].title || "Untitled",
+        title: artwork.titles?.[0]?.title || "Untitled",
         artist:
           artwork.artist ||
           artwork.artistMakerPerson?.[0]?.name?.text ||
           "Unknown",
+        summary: artwork.summaryDescription || "No Description Available",
+        type: artwork.objectType || "Unknown",
         img_url: image?._primary_thumbnail || "",
         medium: artwork.materials || "Unknown",
         techniques: artwork.techniques || "Unknown",

@@ -36,6 +36,12 @@ const fetchArtworks = (req, res) => {
         const cmaData = cmaResponse.data;
         const cmaRecords = cmaData.data;
 
+        const totalVamPages = vamData.pages || 0;
+        const totalCmaPages = Math.ceil(cmaData.info.total / limit);
+
+
+        const totalPages = Math.max(totalVamPages, totalCmaPages);
+
         const combinedRecords = [
           ...vamRecords.slice(0, limit),
           ...cmaRecords.slice(0, limit),
@@ -44,10 +50,7 @@ const fetchArtworks = (req, res) => {
         res.json({
           records: combinedRecords,
           currentPage: page,
-          totalPages: Math.max(
-            Math.ceil(vamRecords.length / limit),
-            Math.ceil(cmaRecords.length / limit)
-          ),
+          totalPages: totalPages,
         });
       })
     )

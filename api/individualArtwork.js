@@ -73,7 +73,6 @@ function fetchVAMArtById(id) {
     .then((response) => {
       const artwork = response.data.record;
       const image = response.data.meta.images;
-
       if (!artwork) {
         throw new Error("Artwork not found in V&A");
       }
@@ -82,9 +81,7 @@ function fetchVAMArtById(id) {
         id: artwork.systemNumber || "Unknown",
         title: artwork.title || "Untitled",
         artist:
-          artwork.artist ||
-          artwork.artistMakerOrganisations[0].name.text ||
-          "Unknown",
+          artwork.artist || artwork.artistMakerPerson[0].name.text || "Unknown",
         img_url: image._primary_thumbnail || "",
         medium: artwork.materials || "Unknown",
         techniques: artwork.techniques || "Unknown",
@@ -96,11 +93,11 @@ function fetchVAMArtById(id) {
     .catch((error) => {
       if (error.response && error.response.status === 404) {
         console.error("Artwork not found in V&A:", id);
-        return null; 
+        return null;
       }
 
       console.error("Error fetching artwork from V&A:", error.message);
-      throw error; 
+      throw error;
     });
 }
 

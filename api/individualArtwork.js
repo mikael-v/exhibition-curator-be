@@ -79,7 +79,7 @@ function fetchVAMArtById(id) {
 
       return {
         id: artwork.systemNumber || "Unknown",
-        title: artwork.title || "Untitled",
+        title: artwork.title || artwork.titles[0].title || "Untitled",
         artist:
           artwork.artist || artwork.artistMakerPerson[0].name.text || "Unknown",
         img_url: image._primary_thumbnail || "",

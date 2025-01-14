@@ -6,7 +6,7 @@ const { fetchArtworkById } = require("./api/individualArtwork.js");
 const { fetchArtworks } = require("./api/allArtwork.js");
 const { getAPIs } = require("./api/endpoints.js");
 
-app.get("/api", getAPIs);
+app.get("/", "/api", getAPIs);
 app.get("/api/artwork", fetchArtworks);
 app.get("/api/artwork/:id", fetchArtworkById);
 

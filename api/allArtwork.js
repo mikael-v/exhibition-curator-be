@@ -4,10 +4,7 @@ const fetchArtworks = async (req, res) => {
   let page = parseInt(req.query.page) || 1;
   let limit = parseInt(req.query.limit) || 10;
   let searchQuery = req.query.search || "";
-
-  if (isNaN(page) || isNaN(limit) || page <= 0 || limit <= 0) {
-    return res.status(400).send({ msg: "Invalid query parameters" });
-  }
+  let sortBy = req.query.sortBy || "title"; 
 
   const vamApiUrl = "https://api.vam.ac.uk/v2/objects/search";
   const cmaApiUrl = "https://openaccess-api.clevelandart.org/api/artworks";
@@ -54,9 +51,31 @@ const fetchArtworks = async (req, res) => {
       );
     });
 
-    const totalRecords = filteredBySearch.length;
-    const totalCombinedPages = Math.ceil(totalRecords / limit);
+    const normalizeString = (str) => {
+      if (!str) return "";
+      return str.replace(/[^\w\s]/gi, ""); 
+    };
 
+    if (sortBy === "title") {
+      filteredBySearch.sort((a, b) => {
+        const titleA = normalizeString(a.title || a._primaryTitle || "");
+        const titleB = normalizeString(b.title || b._primaryTitle || "");
+        return titleA.localeCompare(titleB);
+      });
+    } else if (sortBy === "artist") {
+      filteredBySearch.sort((a, b) => {
+        const artistA = normalizeString(
+          a.artist || a.creators?.[0]?.description || ""
+        );
+        const artistB = normalizeString(
+          b.artist || b.creators?.[0]?.description || ""
+        );
+        return artistA.localeCompare(artistB);
+      });
+    }
+
+    const totalRecords = filteredBySearch.length;
+    const totalPages = Math.ceil(totalRecords / limit);
     const startIndex = (page - 1) * limit;
 
     if (startIndex >= totalRecords) {
@@ -71,7 +90,7 @@ const fetchArtworks = async (req, res) => {
     res.json({
       records: paginatedRecords,
       currentPage: page,
-      totalPages: totalCombinedPages,
+      totalPages: totalPages,
       totalRecords: totalRecords,
     });
   } catch (error) {

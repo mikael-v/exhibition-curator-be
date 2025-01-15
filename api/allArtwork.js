@@ -12,12 +12,12 @@ const fetchArtworks = async (req, res) => {
   const cmaApiUrl = "https://openaccess-api.clevelandart.org/api/artworks";
 
   const vamParams = {
-    page_size: 100, 
-    q: "art", 
+    page_size: 100,
+    q: "art",
   };
 
   const cmaParams = {
-    limit: 100, 
+    limit: 100,
   };
 
   try {
@@ -27,7 +27,15 @@ const fetchArtworks = async (req, res) => {
     const cmaResponse = await axios.get(cmaApiUrl, { params: cmaParams });
     const cmaRecords = cmaResponse.data.data || [];
 
-    const combinedRecords = [...vamRecords, ...cmaRecords];
+    const filteredVamRecords = vamRecords.filter(
+      (record) => record._primaryImageId || record._images?.length > 0
+    );
+
+     const filteredCmaRecords = cmaRecords.filter(
+       (record) => record.images?.web || record.primary_image_url
+     );
+
+    const combinedRecords = [...filteredVamRecords, ...filteredCmaRecords];
     const totalRecords = combinedRecords.length;
     const totalCombinedPages = Math.ceil(totalRecords / limit);
 

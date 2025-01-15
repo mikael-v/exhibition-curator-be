@@ -4,7 +4,7 @@ const fetchArtworks = async (req, res) => {
   let page = parseInt(req.query.page) || 1;
   let limit = parseInt(req.query.limit) || 10;
   let searchQuery = req.query.search || "";
-  let sortBy = req.query.sortBy || "title"; 
+  let sortBy = req.query.sortBy || "title";
 
   const vamApiUrl = "https://api.vam.ac.uk/v2/objects/search";
   const cmaApiUrl = "https://openaccess-api.clevelandart.org/api/artworks";
@@ -53,7 +53,7 @@ const fetchArtworks = async (req, res) => {
 
     const normalizeString = (str) => {
       if (!str) return "";
-      return str.replace(/[^\w\s]/gi, ""); 
+      return str.replace(/[^\w\s]/gi, "");
     };
 
     if (sortBy === "title") {
@@ -64,15 +64,24 @@ const fetchArtworks = async (req, res) => {
       });
     } else if (sortBy === "artist") {
       filteredBySearch.sort((a, b) => {
-        const artistA = normalizeString(
-          a.artist || a.creators?.[0]?.description || ""
-        );
-        const artistB = normalizeString(
-          b.artist || b.creators?.[0]?.description || ""
-        );
+        const artistA =
+          a.artist ||
+          a.creators?.[0]?.description ||
+          a._primaryMaker?.name ||
+          a.records?.artistMakerOrganisations?.[0]?.name?.text ||
+          "Unknown";
+
+        const artistB =
+          b.artist ||
+          b.creators?.[0]?.description ||
+          b._primaryMaker?.name ||
+          b.records?.artistMakerOrganisations?.[0]?.name?.text ||
+          "Unknown";
+
         return artistA.localeCompare(artistB);
       });
     }
+    
 
     const totalRecords = filteredBySearch.length;
     const totalPages = Math.ceil(totalRecords / limit);

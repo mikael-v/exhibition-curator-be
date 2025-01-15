@@ -45,7 +45,11 @@ function fetchClevelandArtById(id) {
       return {
         id: artwork.id || "Unknown",
         title: artwork.title || "Untitled",
-        summary: artwork.description || "No summary available",
+        summary:
+          artwork.description ||
+          artwork.creditline ||
+          artwork.tombstone ||
+          "No summary available",
         type: artwork.type || "Unknown",
         img_url: artwork.images?.web?.url || "",
         medium: artwork.medium || "Unknown",
@@ -83,7 +87,11 @@ function fetchVAMArtById(id) {
           artwork.artist ||
           artwork.artistMakerPerson?.[0]?.name?.text ||
           "Unknown",
-        summary: artwork.summaryDescription || "No Description Available",
+        summary:
+          artwork.summaryDescription ||
+          artwork.briefDescription ||
+          artwork.physicalDescription ||
+          "No Description Available",
         type: artwork.objectType || "Unknown",
         img_url: image?._primary_thumbnail || "",
         medium: artwork.materials || "Unknown",

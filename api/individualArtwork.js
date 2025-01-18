@@ -54,7 +54,8 @@ function fetchClevelandArtById(id) {
         img_url: artwork.images?.web?.url || "",
         medium: artwork.medium || "Unknown",
         dimensions: artwork.measurements || "Unknown",
-        technique: artwork.technique || "Unknown",
+        technique:
+          artwork.technique || artwork.materialsAndTechniques || "Unknown",
         categories: artwork.categories,
         artist: artwork.creators[0].description || "Unknown",
         source: "Cleveland Museum of Art",

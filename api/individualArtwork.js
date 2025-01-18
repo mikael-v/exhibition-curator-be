@@ -54,8 +54,7 @@ function fetchClevelandArtById(id) {
         img_url: artwork.images?.web?.url || "",
         medium: artwork.medium || "Unknown",
         dimensions: artwork.measurements || "Unknown",
-        technique:
-          artwork.technique || artwork.materialsAndTechniques || "Unknown",
+        techniques: artwork.technique || "Unknown",
         categories: artwork.categories,
         artist: artwork.creators[0].description || "Unknown",
         source: "Cleveland Museum of Art",
@@ -80,7 +79,7 @@ function fetchVAMArtById(id) {
         throw new Error("Artwork not found in V&A");
       }
 
-      console.log(artwork);
+      console.log(artwork.materialsAndTechniques, "Artwork");
       return {
         id: artwork.systemNumber || "Unknown",
         title: artwork.titles?.[0]?.title || "Untitled",
@@ -96,7 +95,10 @@ function fetchVAMArtById(id) {
         type: artwork.objectType || "Unknown",
         img_url: image?._primary_thumbnail || "",
         medium: artwork.materials || "Unknown",
-        techniques: artwork.techniques || "Unknown",
+        techniques:
+          artwork.techniques.length > 0
+            ? artwork.techniques
+            : artwork.materialsAndTechniques || "Unknown",
         categories: artwork.categories || "Unknown",
         dimensions: artwork.dimensions || "Unknown",
         source: "Victoria and Albert Museum",

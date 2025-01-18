@@ -80,7 +80,10 @@ function fetchVAMArtById(id) {
       if (!artwork) {
         throw new Error("Artwork not found in V&A");
       }
-     
+
+      const categories = artwork.categories.map((category) => category.text);
+      
+
       return {
         id: artwork.systemNumber || "Unknown",
         title: artwork.titles?.[0]?.title || "Untitled",
@@ -95,7 +98,10 @@ function fetchVAMArtById(id) {
           artwork.physicalDescription ||
           "No Description Available",
         img_url: image?._primary_thumbnail || "",
-        medium: artwork.materials || "Unknown",
+        medium:
+          artwork.materials.length > 0
+            ? artwork.materials
+            : categories || "Unknown",
         techniques:
           artwork.techniques.length > 0
             ? artwork.techniques

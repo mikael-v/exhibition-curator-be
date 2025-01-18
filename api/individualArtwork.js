@@ -10,7 +10,6 @@ function fetchArtworkById(req, res) {
   if (/^\d+$/.test(id)) {
     fetchClevelandArtById(id)
       .then((artwork) => {
-        console.log(artwork);
         res.json(artwork);
       })
       .catch((error) => {
@@ -25,7 +24,6 @@ function fetchArtworkById(req, res) {
   } else {
     fetchVAMArtById(id)
       .then((artwork) => {
-        console.log(artwork);
         res.json(artwork);
       })
       .catch((error) => {
@@ -82,13 +80,14 @@ function fetchVAMArtById(id) {
       if (!artwork) {
         throw new Error("Artwork not found in V&A");
       }
-
+     
       return {
         id: artwork.systemNumber || "Unknown",
         title: artwork.titles?.[0]?.title || "Untitled",
         artist:
           artwork.artist ||
           artwork.artistMakerPerson?.[0]?.name?.text ||
+          artwork.artistMakerOrganisations?.[0]?.name?.text ||
           "Unknown",
         summary:
           artwork.summaryDescription ||

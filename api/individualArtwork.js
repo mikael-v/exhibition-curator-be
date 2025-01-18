@@ -10,6 +10,7 @@ function fetchArtworkById(req, res) {
   if (/^\d+$/.test(id)) {
     fetchClevelandArtById(id)
       .then((artwork) => {
+        console.log(artwork);
         res.json(artwork);
       })
       .catch((error) => {
@@ -24,6 +25,7 @@ function fetchArtworkById(req, res) {
   } else {
     fetchVAMArtById(id)
       .then((artwork) => {
+        console.log(artwork);
         res.json(artwork);
       })
       .catch((error) => {
@@ -42,6 +44,7 @@ function fetchClevelandArtById(id) {
       if (!artwork) {
         throw new Error("Artwork not found");
       }
+
       return {
         id: artwork.id || "Unknown",
         title: artwork.title || "Untitled",
@@ -50,13 +53,14 @@ function fetchClevelandArtById(id) {
           artwork.creditline ||
           artwork.tombstone ||
           "No summary available",
-        type: artwork.type || "Unknown",
+
         img_url: artwork.images?.web?.url || "",
-        medium: artwork.medium || "Unknown",
+        medium: artwork.medium || artwork.type || "Unknown",
         dimensions: artwork.measurements || "Unknown",
         techniques: artwork.technique || "Unknown",
-        categories: artwork.categories,
-        artist: artwork.creators[0].description || "Unknown",
+
+        artist:
+          artwork.creators?.[0]?.description || artwork.creditline || "Unknown",
         source: "Cleveland Museum of Art",
       };
     })
@@ -79,7 +83,6 @@ function fetchVAMArtById(id) {
         throw new Error("Artwork not found in V&A");
       }
 
-      console.log(artwork.materialsAndTechniques, "Artwork");
       return {
         id: artwork.systemNumber || "Unknown",
         title: artwork.titles?.[0]?.title || "Untitled",
@@ -92,14 +95,12 @@ function fetchVAMArtById(id) {
           artwork.briefDescription ||
           artwork.physicalDescription ||
           "No Description Available",
-        type: artwork.objectType || "Unknown",
         img_url: image?._primary_thumbnail || "",
         medium: artwork.materials || "Unknown",
         techniques:
           artwork.techniques.length > 0
             ? artwork.techniques
             : artwork.materialsAndTechniques || "Unknown",
-        categories: artwork.categories || "Unknown",
         dimensions: artwork.dimensions || "Unknown",
         source: "Victoria and Albert Museum",
       };

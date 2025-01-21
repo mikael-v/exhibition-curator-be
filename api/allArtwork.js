@@ -1,17 +1,14 @@
 const axios = require("axios");
 
 const fetchArtworks = async (req, res) => {
-  let page = parseInt(req.query.page) 
-  let limit = parseInt(req.query.limit) 
+  let page = parseInt(req.query.page) || 1;
+  let limit = parseInt(req.query.limit) || 10;
   let searchQuery = req.query.search || "";
   let sortBy = req.query.sortBy || "title";
 
   if (isNaN(page) || isNaN(limit) || page <= 0 || limit <= 0) {
     return res.status(400).send({ msg: "Invalid query parameters" });
   }
-
-   page = parseInt(page, 10) || 1;
-   limit = parseInt(limit, 10) || 10; 
 
   const vamApiUrl = "https://api.vam.ac.uk/v2/objects/search";
   const cmaApiUrl = "https://openaccess-api.clevelandart.org/api/artworks";

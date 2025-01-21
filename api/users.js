@@ -91,8 +91,72 @@ const fetchInidividualCollections = (req, res) => {
   });
 };
 
+const addArtworkToCollection = (req, res) => {
+  const { userId, collectionName } = req.params;
+  const { artworkId } = req.body;
+
+  const user = mockUsers[`user${userId}`];
+  if (!user) {
+    return res.status(404).json({ msg: "User not found" });
+  }
+
+  let collection = user.collections[collectionName];
+
+  if (!collection) {
+    return res
+      .status(404)
+      .json({ msg: `Collection '${collectionName}' not found` });
+  }
+
+  if (collection.includes(artworkId)) {
+    return res.status(400).json({ msg: "Artwork already in collection" });
+  }
+
+  collection.push(artworkId);
+
+  return res.status(201).json({
+    msg: `Artwork ${artworkId} added to collection '${collectionName}'`,
+    collection: user.collections[collectionName],
+  });
+};
+
+const createNewCollection = (req, res) => {
+  const { userId } = req.params;
+  const { collectionName } = req.body;
+
+  if (
+    !collectionName ||
+    typeof collectionName !== "string" ||
+    collectionName.trim() === ""
+  ) {
+    return res.status(400).json({ msg: "Invalid collection name" });
+  }
+
+  const user = mockUsers[`user${userId}`];
+  if (!user) {
+    return res.status(404).json({ msg: "User not found" });
+  }
+
+  if (user.collections[collectionName]) {
+    return res
+      .status(400)
+      .json({ msg: `Collection '${collectionName}' already exists` });
+  }
+
+  user.collections[collectionName] = [];
+
+  return res.status(201).json({
+    msg: `Collection '${collectionName}' created successfully`,
+    collections: user.collections,
+  });
+};
+
+
 module.exports = {
   fetchUsers,
   fetchUserCollections,
   fetchInidividualCollections,
+  addArtworkToCollection,
+  createNewCollection,
+  
 };

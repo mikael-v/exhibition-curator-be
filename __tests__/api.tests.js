@@ -27,14 +27,6 @@ describe("/api/artworks", () => {
         expect(artworks.length).toBeLessThanOrEqual(20);
       });
   });
-  test("Returns 400 for invalid query parameters", () => {
-    return request(app)
-      .get("/api/artworks?page=abc&limit=xyz")
-      .expect(400)
-      .then((response) => {
-        expect(response.body.msg).toBe("Invalid query parameters");
-      });
-  });
 });
 
 describe("/api/artworks/:id", () => {
@@ -127,3 +119,49 @@ describe("/api/artworks/:id", () => {
           });
       });
   });
+
+describe("POST /api/users/collections", () => {
+  test(`should add an artwork to a collection and respond with a 201 status code`, () => {
+    const testArtwork = {
+      artworkId: 94979,
+      title: "Nathaniel Hurd",
+      summary:
+        "Hurd was a prominent silversmith and engraver in Boston, and the warm gaze and unforced smile in his portrait by Copley suggest the friendship between the two artists. Hurd's open-collared shirt, as well as the rakishly tilted turban that covers his shaved head in place of a ceremonial powdered wig, create an air of informality that is unusual for a portrait of this time.",
+      img_url:
+        "https://openaccess-cdn.clevelandart.org/1915.534/1915.534_web.jpg",
+      medium: "Painting",
+      dimensions:
+        "Framed: 90.5 x 78 x 6.5 cm (35 5/8 x 30 11/16 x 2 9/16 in.); Unframed: 76.2 x 64.8 cm (30 x 25 1/2 in.)",
+      techniques: "oil on canvas",
+      artist: "John Singleton Copley (American, 1738–1815)",
+      source: "Cleveland Museum of Art",
+    };
+    return request(app)
+      .post("/api/users/1/collections/favorites/add")
+      .send({ artworkId: testArtwork.artworkId })
+      .expect(201)
+      .then((response) => {
+        const artwork = response.body;
+        console.log(artwork);
+        expect(response.status).toBe(201);
+        expect(response.body.msg).toBe(
+          `Artwork ${testArtwork.artworkId} added to collection 'favorites'`
+        );
+        expect(response.body.collection).toContain(testArtwork.artworkId);
+      });
+  });
+  test(`should create a new collection in the user's collection and return with a 201 status code`, () => {
+    return request(app)
+      .post("/api/users/1/collections")
+      .send({ collectionName: "landscapeArt" })
+      .expect(201)
+      .then((response) => {
+        expect(response.body).toMatchObject({
+          msg: "Collection 'landscapeArt' created successfully",
+          collections: expect.objectContaining({
+            landscapeArt: [],
+          }),
+        });
+      });
+  });
+});

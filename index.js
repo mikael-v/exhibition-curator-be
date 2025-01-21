@@ -12,6 +12,8 @@ const {
   fetchUsers,
   fetchUserCollections,
   fetchInidividualCollections,
+  addArtworkToCollection,
+  createNewCollection,
 } = require("./api/users.js");
 
 app.get("/", getAPIs);
@@ -26,6 +28,13 @@ app.get(
   "/api/users/:userId/collections/:collectionName",
   fetchInidividualCollections
 );
+app.post(
+  "/api/users/:userId/collections/:collectionName/add",
+  addArtworkToCollection
+);
+app.post("/api/users/:userId/collections", createNewCollection);
+
+
 
 app.use((err, req, res, next) => {
   if (err.code) {

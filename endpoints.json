@@ -6,8 +6,11 @@
     "GET /artwork": {
       "description": "serves an array of 20 different artworks, 10 from each API"
     },
-      "GET /artwork/:id": {
+    "GET /artwork/:id": {
       "description": "serves information of artwork at the given id"
+    },
+    "GET /api/users": {
+      "description": "serves mockUsers object containing user's names, collections and IDs"
     }
   }
 }

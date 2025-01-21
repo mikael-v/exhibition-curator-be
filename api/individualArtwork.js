@@ -3,8 +3,8 @@ const axios = require("axios");
 function fetchArtworkById(req, res) {
   const { id } = req.params;
 
-  if (!id) {
-    return res.status(400).json({ msg: "Invalid identifier" });
+  if (!id || id.trim() === "") {
+    return res.status(400).json({ msg: "Invalid query parameters" });
   }
 
   if (/^\d+$/.test(id)) {
@@ -21,7 +21,7 @@ function fetchArtworkById(req, res) {
           error: "Failed to fetch artwork from Cleveland Museum of Art",
         });
       });
-  } else {
+  } else if (/^[A-Za-z]\d+$/.test(id)) {
     fetchVAMArtById(id)
       .then((artwork) => {
         res.json(artwork);
@@ -30,6 +30,8 @@ function fetchArtworkById(req, res) {
         console.error("Error fetching artwork from V&A:", error.message);
         res.status(500).json({ error: "Failed to fetch artwork from V&A" });
       });
+  } else {
+    return res.status(400).json({ msg: "Invalid query parameters" });
   }
 }
 
@@ -82,7 +84,6 @@ function fetchVAMArtById(id) {
       }
 
       const categories = artwork.categories.map((category) => category.text);
-      
 
       return {
         id: artwork.systemNumber || "Unknown",

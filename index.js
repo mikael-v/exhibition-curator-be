@@ -8,7 +8,11 @@ const findFreePort = require("find-free-port");
 const { fetchArtworkById } = require("./api/individualArtwork.js");
 const { fetchArtworks } = require("./api/allArtwork.js");
 const { getAPIs } = require("./api/endpoints.js");
-const { fetchUsers } = require("./api/users.js");
+const {
+  fetchUsers,
+  fetchUserCollections,
+  fetchInidividualCollections,
+} = require("./api/users.js");
 
 app.get("/", getAPIs);
 app.get("/api", getAPIs);
@@ -17,7 +21,11 @@ app.get("/api/artworks", fetchArtworks);
 app.get("/api/artwork/:id", fetchArtworkById);
 app.get("/api/artworks/:id", fetchArtworkById);
 app.get("/api/users", fetchUsers);
-
+app.get("/api/users/:userId/collections", fetchUserCollections);
+app.get(
+  "/api/users/:userId/collections/:collectionName",
+  fetchInidividualCollections
+);
 
 app.use((err, req, res, next) => {
   if (err.code) {
@@ -37,13 +45,12 @@ const DEFAULT_PORT = 9091;
 findFreePort(DEFAULT_PORT, (err, freePort) => {
   if (err) {
     console.error("Error finding a free port:", err);
-    process.exit(1); 
+    process.exit(1);
   }
 
   app.listen(freePort, () => {
     console.log(`Server is listening on port ${freePort}`);
   });
 });
-
 
 module.exports = app;

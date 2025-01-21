@@ -63,25 +63,67 @@ describe("/api/artworks/:id", () => {
         .then((response) => {
           expect(response.body.msg).toBe("Invalid query parameters");
         });
-    }),
-    describe("/api/users", () => {
-      describe("GET /api/users", () => {
-        test("Returns 200 and an array of users with correct properties", () => {
-          return request(app)
-            .get("/api/users")
-            .expect(200)
-            .then((response) => {
-              const users = response.body.users;
-              expect(users).toBeInstanceOf(Array);
-              expect(users.length).toBeGreaterThan(0);
-
-              users.forEach((user) => {
-                expect(user).toHaveProperty("id");
-                expect(user).toHaveProperty("name");
-                expect(user).toHaveProperty("collections");
-              });
-            });
-        });
-      });
     });
-});
+}),
+  describe("/api/users", () => {
+    describe("GET /api/users", () => {
+      test("Returns 200 and an array of users with correct properties", () => {
+        return request(app)
+          .get("/api/users")
+          .expect(200)
+          .then((response) => {
+            const users = response.body.users;
+            expect(users).toBeInstanceOf(Array);
+            expect(users.length).toBeGreaterThan(0);
+
+            users.forEach((user) => {
+              expect(user).toHaveProperty("id");
+              expect(user).toHaveProperty("name");
+              expect(user).toHaveProperty("collections");
+            });
+          });
+      });
+    }),
+      test("Returns 404 for non-existent user", () => {
+        return request(app)
+          .get("/api/users/9999/collections")
+          .expect(404)
+          .then((response) => {
+            expect(response.body.msg).toBe("User not found");
+          });
+      }),
+      test("Returns 200 and an array of collections available at the user endpoint", () => {
+        return request(app)
+          .get("/api/users/1/collections")
+          .then((response) => {
+            const collections = response.body.collections;
+            expect(Object.keys(collections).length).toBeGreaterThan(0);
+          });
+      }),
+      test("Returns 200 with 'No Collections Found' if user has no collections", () => {
+        return request(app)
+          .get("/api/users/2/collections")
+          .expect(200)
+          .then((response) => {
+            expect(response.body.msg).toBe("No Collections Found");
+          });
+      }),
+      test("Returns 404 for non-existent collection", () => {
+        return request(app)
+          .get("/api/users/1/collections/nonExistentCollection")
+          .expect(404)
+          .then((response) => {
+            expect(response.body.msg).toBe(
+              "Collection 'nonExistentCollection' not found"
+            );
+          });
+      }),
+      test("Returns 404 for an empty collection", () => {
+        return request(app)
+          .get("/api/users/1/collections/favorites")
+          .expect(404)
+          .then((response) => {
+            expect(response.body.msg).toBe("No artwork found in 'favorites'");
+          });
+      });
+  });

@@ -95,6 +95,9 @@ const addArtworkToCollection = (req, res) => {
   const { userId, collectionName } = req.params;
   const { artworkId } = req.body;
 
+    const normalizedArtworkId = String(artworkId);
+
+
   const user = mockUsers[`user${userId}`];
   if (!user) {
     return res.status(404).json({ msg: "User not found" });
@@ -102,17 +105,18 @@ const addArtworkToCollection = (req, res) => {
 
   let collection = user.collections[collectionName];
 
+
   if (!collection) {
     return res
       .status(404)
       .json({ msg: `Collection '${collectionName}' not found` });
   }
 
-  if (collection.includes(artworkId)) {
+  if (collection.includes(normalizedArtworkId)) {
     return res.status(400).json({ msg: "Artwork already in collection" });
   }
 
-  collection.push(artworkId);
+  collection.push(normalizedArtworkId);
 
   return res.status(201).json({
     msg: `Artwork ${artworkId} added to collection '${collectionName}'`,

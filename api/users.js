@@ -97,8 +97,9 @@ const addArtworkToCollection = (req, res) => {
 
     const normalizedArtworkId = String(artworkId);
 
+  const userKey = `user${userId}`;
+  const user = mockUsers[userKey];
 
-  const user = mockUsers[`user${userId}`];
   if (!user) {
     return res.status(404).json({ msg: "User not found" });
   }

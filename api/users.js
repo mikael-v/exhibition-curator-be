@@ -106,6 +106,13 @@ const addArtworkToCollection = (req, res) => {
 
   let collection = user.collections[collectionName];
 
+   if (collection && !Array.isArray(collection)) {
+     console.warn(
+       `Collection '${collectionName}' is not an array. Reinitializing.`
+     );
+     collection = user.collections[collectionName] = [];
+   }
+
 
   if (!collection) {
     return res

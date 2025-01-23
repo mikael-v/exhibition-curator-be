@@ -29,12 +29,10 @@ app.get(
   fetchInidividualCollections
 );
 app.post(
-  "/api/users/:userId/collections/:collectionName/add",
+  "/api/users/:userId/collections/:collectionName",
   addArtworkToCollection
 );
 app.post("/api/users/:userId/collections", createNewCollection);
-
-
 
 app.use((err, req, res, next) => {
   if (err.code) {

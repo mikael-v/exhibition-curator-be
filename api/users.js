@@ -1,22 +1,19 @@
-const fs = require("fs");
-const path = require("path");
+const mongoose = require("mongoose");
 
-const usersFile = path.join(__dirname, "../users.JSON");
-let mockUsers = {};
+const userSchema = new mongoose.Schema({
+  id: { type: Number, required: true, unique: true },
+  name: { type: String, required: true },
+  collections: {
+    type: Map,
+    of: [String],
+  },
+});
 
-if (fs.existsSync(usersFile)) {
-  try {
-    mockUsers = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
-    console.log("mockUsers loaded from file.");
-  } catch (err) {
-    console.error(
-      "Error reading mockUsers file. Initializing with default data."
-    );
-  }
-} else {
-  console.warn("mockUsers file not found. Initializing with default data.");
-  mockUsers = {
-    user1: {
+const User = mongoose.model("User", userSchema);
+
+const createMultipleUsers = async () => {
+  const users = [
+    {
       id: 1,
       name: "Alice",
       collections: {
@@ -24,36 +21,33 @@ if (fs.existsSync(usersFile)) {
         modernArt: [],
       },
     },
-    user2: {
+    {
       id: 2,
       name: "Bob",
       collections: {},
     },
-    user3: {
+    {
       id: 3,
       name: "Charlie",
-      collections: {},
+      collections: {
+        photography: [],
+      },
     },
-  };
-  saveUsersToFile();
-}
+  ];
 
-const saveUsersToFile = () => {
   try {
-    fs.writeFileSync(usersFile, JSON.stringify(mockUsers, null, 2), "utf-8");
-    console.log("mockUsers saved to file.");
-  } catch (err) {
-    console.error("Error saving mockUsers to file:", err.message);
+    await User.insertMany(users);
+    console.log("Multiple users created successfully");
+  } catch (error) {
+    console.error("Error inserting users:", error.message);
   }
 };
 
-const fetchUsers = (req, res) => {
+createMultipleUsers();
+
+const fetchUsers = async (req, res) => {
   try {
-    const users = Object.values(mockUsers).map((user) => ({
-      id: user.id,
-      name: user.name,
-      collections: user.collections,
-    }));
+    const users = await User.find({}, "id name collections").lean();
     res.json({ users });
   } catch (error) {
     console.error("Error fetching users:", error.message);
@@ -61,103 +55,97 @@ const fetchUsers = (req, res) => {
   }
 };
 
-const fetchUserCollections = (req, res) => {
+const fetchUserCollections = async (req, res) => {
   const { userId } = req.params;
 
-  const user = mockUsers[`user${userId}`];
+  try {
+    const user = await User.findOne({ id: userId }).lean();
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
 
-  if (!user) {
-    return res.status(404).json({ msg: "User not found" });
+    const collections = user.collections || {};
+    if (Object.keys(collections).length === 0) {
+      return res.json({ msg: "No Collections Found" });
+    }
+
+    return res.json({
+      collections,
+    });
+  } catch (error) {
+    console.error("Error fetching collections:", error.message);
+    res.status(500).json({ error: "Failed to fetch collections" });
   }
-
-  const collections = user.collections;
-
-  if (Object.keys(collections).length === 0) {
-    return res.json({ msg: "No Collections Found" });
-  }
-
-  return res.json({
-    collections,
-  });
 };
 
-const fetchIndividualCollections = (req, res) => {
+const fetchIndividualCollections = async (req, res) => {
   const { userId, collectionName } = req.params;
-  const user = mockUsers[`user${userId}`];
 
-  if (!user) {
-    return res.status(404).json({ msg: "User not found" });
+  try {
+    const user = await User.findOne({ id: userId }).lean();
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    const collection = user.collections?.[collectionName];
+    if (!collection) {
+      return res
+        .status(404)
+        .json({ msg: `Collection '${collectionName}' not found` });
+    }
+
+    if (collection.length === 0) {
+      return res
+        .status(404)
+        .json({ msg: `No artwork found in '${collectionName}'` });
+    }
+
+    return res.json({
+      userName: user.name,
+      collectionName: collectionName,
+      collection: collection,
+    });
+  } catch (error) {
+    console.error("Error fetching individual collection:", error.message);
+    res.status(500).json({ error: "Failed to fetch collection" });
   }
-
-  const collections = user.collections;
-
-  if (Object.keys(collections).length === 0) {
-    return res.json({ msg: "No collections found" });
-  }
-
-  const collection = collections[collectionName];
-
-  if (!collection) {
-    return res
-      .status(404)
-      .json({ msg: `Collection '${collectionName}' not found` });
-  }
-
-  if (collection.length === 0) {
-    return res
-      .status(404)
-      .json({ msg: `No artwork found in '${collectionName}'` });
-  }
-
-  return res.json({
-    userName: user.name,
-    collectionName: collectionName,
-    collection: collection,
-  });
 };
 
-const addArtworkToCollection = (req, res) => {
+const addArtworkToCollection = async (req, res) => {
   const { userId, collectionName } = req.params;
   const { artworkId } = req.body;
 
-  const normalizedArtworkId = String(artworkId);
+  try {
+    const user = await User.findOne({ id: userId });
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
 
-  const userKey = `user${userId}`;
-  const user = mockUsers[userKey];
+    if (!user.collections[collectionName]) {
+      return res
+        .status(404)
+        .json({ msg: `Collection '${collectionName}' not found` });
+    }
 
-  if (!user) {
-    return res.status(404).json({ msg: "User not found" });
+    const collection = user.collections[collectionName];
+    if (collection.includes(artworkId)) {
+      return res.status(400).json({ msg: "Artwork already in collection" });
+    }
+
+    collection.push(artworkId);
+    await user.save();
+
+    return res.status(201).json({
+      msg: `Artwork ${artworkId} added to collection '${collectionName}'`,
+      collection: user.collections[collectionName],
+    });
+  } catch (error) {
+    console.error("Error adding artwork:", error.message);
+    res.status(500).json({ error: "Failed to add artwork" });
   }
-
-  let collection = user.collections[collectionName];
-
-  if (collection && !Array.isArray(collection)) {
-    console.warn(
-      `Collection '${collectionName}' is not an array. Reinitializing.`
-    );
-    collection = user.collections[collectionName] = [];
-  }
-
-  if (!collection) {
-    return res
-      .status(404)
-      .json({ msg: `Collection '${collectionName}' not found` });
-  }
-
-  if (collection.includes(normalizedArtworkId)) {
-    return res.status(400).json({ msg: "Artwork already in collection" });
-  }
-
-  collection.push(normalizedArtworkId);
-  saveUsersToFile();
-
-  return res.status(201).json({
-    msg: `Artwork ${artworkId} added to collection '${collectionName}'`,
-    collection: user.collections[collectionName],
-  });
 };
 
-const createNewCollection = (req, res) => {
+const createNewCollection = async (req, res) => {
   const { userId } = req.params;
   const { collectionName } = req.body;
 
@@ -169,24 +157,29 @@ const createNewCollection = (req, res) => {
     return res.status(400).json({ msg: "Invalid collection name" });
   }
 
-  const user = mockUsers[`user${userId}`];
-  if (!user) {
-    return res.status(404).json({ msg: "User not found" });
+  try {
+    const user = await User.findOne({ id: userId });
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    if (user.collections[collectionName]) {
+      return res
+        .status(400)
+        .json({ msg: `Collection '${collectionName}' already exists` });
+    }
+
+    user.collections[collectionName] = [];
+    await user.save();
+
+    return res.status(201).json({
+      msg: `Collection '${collectionName}' created successfully`,
+      collections: user.collections,
+    });
+  } catch (error) {
+    console.error("Error creating collection:", error.message);
+    res.status(500).json({ error: "Failed to create collection" });
   }
-
-  if (user.collections[collectionName]) {
-    return res
-      .status(400)
-      .json({ msg: `Collection '${collectionName}' already exists` });
-  }
-
-  user.collections[collectionName] = [];
-  saveUsersToFile();
-
-  return res.status(201).json({
-    msg: `Collection '${collectionName}' created successfully`,
-    collections: user.collections,
-  });
 };
 
 module.exports = {

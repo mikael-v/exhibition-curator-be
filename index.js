@@ -1,9 +1,15 @@
 const express = require("express");
-const app = express();
-app.use(express.json());
 const cors = require("cors");
-app.use(cors());
 const findFreePort = require("find-free-port");
+require("dotenv").config();
+const connectDB = require("./db.js");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+connectDB();
 
 const { fetchArtworkById } = require("./api/individualArtwork.js");
 const { fetchArtworks } = require("./api/allArtwork.js");
@@ -17,6 +23,7 @@ const {
 } = require("./api/users.js");
 
 app.get("/", getAPIs);
+app.get("/api", getAPIs);
 app.get("/api/artwork", fetchArtworks);
 app.get("/api/artworks", fetchArtworks);
 app.get("/api/artwork/:id", fetchArtworkById);
@@ -34,21 +41,15 @@ app.post(
 app.post("/api/users/:userId/collections", createNewCollection);
 
 app.use((err, req, res, next) => {
-  if (err.code) {
-    res.status(400).send({ msg: "Bad request" });
-  } else {
-    next(err);
-  }
-});
-
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).send({ msg: "Something went wrong!" });
+  console.error("Error:", err.message || err);
+  const status = err.status || 500;
+  res.status(status).json({ msg: err.message || "Something went wrong!" });
 });
 
 const DEFAULT_PORT = 9091;
+const PORT = process.env.PORT || DEFAULT_PORT;
 
-findFreePort(DEFAULT_PORT, (err, freePort) => {
+findFreePort(PORT, (err, freePort) => {
   if (err) {
     console.error("Error finding a free port:", err);
     process.exit(1);

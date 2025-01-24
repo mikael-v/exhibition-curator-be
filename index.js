@@ -11,13 +11,12 @@ const { getAPIs } = require("./api/endpoints.js");
 const {
   fetchUsers,
   fetchUserCollections,
-  fetchInidividualCollections,
+  fetchIndividualCollections,
   addArtworkToCollection,
   createNewCollection,
 } = require("./api/users.js");
 
 app.get("/", getAPIs);
-app.get("/api", getAPIs);
 app.get("/api/artwork", fetchArtworks);
 app.get("/api/artworks", fetchArtworks);
 app.get("/api/artwork/:id", fetchArtworkById);
@@ -26,7 +25,7 @@ app.get("/api/users", fetchUsers);
 app.get("/api/users/:userId/collections", fetchUserCollections);
 app.get(
   "/api/users/:userId/collections/:collectionName",
-  fetchInidividualCollections
+  fetchIndividualCollections
 );
 app.post(
   "/api/users/:userId/collections/:collectionName",

@@ -36,6 +36,7 @@ const createMultipleUsers = async () => {
   ];
 
   try {
+    console.log("Inserting users...")
     await User.insertMany(users);
     console.log("Multiple users created successfully");
   } catch (error) {
@@ -47,6 +48,7 @@ createMultipleUsers();
 
 const fetchUsers = async (req, res) => {
   try {
+    console.log("Fetching users...")
     const users = await User.find({}, "id name collections").lean();
     res.json({ users });
   } catch (error) {

@@ -1,17 +1,19 @@
 const mongoose = require("mongoose");
 require("dotenv").config({ path: ".env.process" });
 
-let isConnected = false;
-
 const connectDB = async () => {
-  if (isConnected) return;
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
+    const mongoURI = process.env.MONGO_URI;
+    if (!mongoURI) {
+      console.error("Mongo URI not defined in environment variables");
+      process.exit(1);
+    }
+
+    await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 10000,
     });
-    isConnected = true;
+
     console.log("MongoDB connected successfully");
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error.message);
@@ -19,4 +21,4 @@ const connectDB = async () => {
   }
 };
 
-module.exports = connectDB;
+connectDB();

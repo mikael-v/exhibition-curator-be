@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre("save", async function (next) {
   if (!this.id) {
-    const lastUser = await User.findOne().sort({ id: -1 }).lean(); 
+    const lastUser = await User.findOne().sort({ id: -1 }).lean();
     this.id = lastUser ? lastUser.id + 1 : 1;
   }
   next();
@@ -25,39 +25,41 @@ const generateUniqueId = async () => {
 };
 
 const createMultipleUsers = async () => {
-  await User.deleteMany({});
-
-  const users = [
-    {
-      name: "Alice",
-      collections: {
-        favourites: [],
-        modernArt: [],
-      },
-    },
-    {
-      name: "Bob",
-      collections: {},
-    },
-    {
-      name: "Charlie",
-      collections: {
-        photography: [],
-      },
-    },
-  ];
-
   try {
+    console.log("Deleting existing users...");
+    await User.deleteMany({});
+
+    console.log("Generating unique IDs for users...");
+
+    const users = [
+      {
+        name: "Alice",
+        collections: {
+          favourites: [],
+          modernArt: [],
+        },
+      },
+      {
+        name: "Bob",
+        collections: {
+          paintings: [],
+        },
+      },
+      {
+        name: "Charlie",
+        collections: {
+          photography: [],
+        },
+      },
+    ];
+
+    for (let user of users) {
+      user.id = await generateUniqueId();
+    }
+
     console.log("Inserting users...");
 
-   const userWithIds = await Promise.all(
-     users.map(async (user) => {
-       user.id = await generateUniqueId();
-       return user;
-     })
-   );
-
-    await User.insertMany(userWithIds);
+    await User.insertMany(users);
     console.log("Multiple users created successfully");
   } catch (error) {
     console.error("Error inserting users:", error.message);

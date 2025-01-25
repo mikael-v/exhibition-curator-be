@@ -1,11 +1,20 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
+  id: { type: Number, required: true, unique: true },
   name: { type: String, required: true },
   collections: {
     type: Map,
     of: [String],
   },
+});
+
+userSchema.pre("save", async function (next) {
+  if (!this.id) {
+    const lastUser = await User.findOne().sort({ id: -1 }).lean(); 
+    this.id = lastUser ? lastUser.id + 1 : 1;
+  }
+  next();
 });
 
 const User = mongoose.model("User", userSchema);

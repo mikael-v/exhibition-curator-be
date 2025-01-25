@@ -11,6 +11,12 @@
     },
     "GET /api/users": {
       "description": "serves mockUsers object containing user's names, collections and IDs"
+    },
+    "GET /api/users/:userId/:collections": {
+      "description": "serves all collections available for an individual user"
+    },
+    "GET /api/users/:userId/:collections/:collectionName": {
+      "description": "serves an individual colelction available on the user and its contents, which are either artwork IDs or a message stating there are no artworks in the collection"
     }
   }
 }

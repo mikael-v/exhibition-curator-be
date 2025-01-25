@@ -137,7 +137,7 @@ describe("POST /api/users/collections", () => {
       source: "Cleveland Museum of Art",
     };
     return request(app)
-      .post("/api/users/1/collections/favorites/add")
+      .post("/api/users/1/collections/favorites")
       .send({ artworkId: testArtwork.artworkId })
       .expect(201)
       .then((response) => {

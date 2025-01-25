@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const findFreePort = require("find-free-port");
-require("dotenv").config();
+require("dotenv").config({ path: ".env.process" });
 const connectDB = require("./db.js");
 
 const app = express();

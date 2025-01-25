@@ -17,7 +17,7 @@ const createMultipleUsers = async () => {
       id: 1,
       name: "Alice",
       collections: {
-        favorites: [],
+        favourites: [],
         modernArt: [],
       },
     },

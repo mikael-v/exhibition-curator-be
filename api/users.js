@@ -94,6 +94,7 @@ const fetchUserCollections = async (req, res) => {
     }
 
     return res.json({
+      userName,
       collections,
     });
   } catch (error) {

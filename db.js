@@ -1,25 +1,17 @@
 const mongoose = require("mongoose");
 require("dotenv").config({ path: ".env.process" });
 
+let isConnected = false; // keep track of connection status
+
 const connectDB = async () => {
+  if (isConnected) return;
   try {
-    console.log(process.env.MONGO_URI);
     await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-
-    mongoose.connection.on("connected", () => {
-      console.log("MongoDB connected successfully");
-    });
-
-    mongoose.connection.on("error", (err) => {
-      console.error("MongoDB connection error:", err);
-    });
-
-    mongoose.connection.on("disconnected", () => {
-      console.log("MongoDB disconnected");
-    });
+    isConnected = true;
+    console.log("MongoDB connected successfully");
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error.message);
     process.exit(1);

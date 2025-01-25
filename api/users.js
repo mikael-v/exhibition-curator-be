@@ -25,6 +25,7 @@ const generateUniqueId = async () => {
 };
 
 const createMultipleUsers = async () => {
+  await User.deleteMany({});
   const users = [
     {
       name: "Alice",

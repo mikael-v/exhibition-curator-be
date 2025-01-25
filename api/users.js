@@ -26,6 +26,7 @@ const generateUniqueId = async () => {
 
 const createMultipleUsers = async () => {
   await User.deleteMany({});
+
   const users = [
     {
       name: "Alice",
@@ -48,10 +49,15 @@ const createMultipleUsers = async () => {
 
   try {
     console.log("Inserting users...");
-    for (let user of users) {
-      user.id = await generateUniqueId();
-    }
-    await User.insertMany(users);
+
+   const userWithIds = await Promise.all(
+     users.map(async (user) => {
+       user.id = await generateUniqueId();
+       return user;
+     })
+   );
+
+    await User.insertMany(userWithIds);
     console.log("Multiple users created successfully");
   } catch (error) {
     console.error("Error inserting users:", error.message);

@@ -93,9 +93,10 @@ const fetchUserCollections = async (req, res) => {
       return res.json({ msg: "No Collections Found" });
     }
 
+    const username = user.name;
     return res.json({
-      userName,
       collections,
+      username,
     });
   } catch (error) {
     console.error("Error fetching collections:", error.message);

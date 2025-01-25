@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  id: { type: Number, required: true, unique: true },
   name: { type: String, required: true },
   collections: {
     type: Map,
@@ -11,10 +10,14 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
+const generateUniqueId = async () => {
+  const lastUser = await User.findOne().sort({ id: -1 }).lean();
+  return lastUser ? lastUser.id + 1 : 1;
+};
+
 const createMultipleUsers = async () => {
   const users = [
     {
-      id: 1,
       name: "Alice",
       collections: {
         favourites: [],
@@ -22,12 +25,10 @@ const createMultipleUsers = async () => {
       },
     },
     {
-      id: 2,
       name: "Bob",
       collections: {},
     },
     {
-      id: 3,
       name: "Charlie",
       collections: {
         photography: [],
@@ -36,7 +37,10 @@ const createMultipleUsers = async () => {
   ];
 
   try {
-    console.log("Inserting users...")
+    console.log("Inserting users...");
+    for (let user of users) {
+      user.id = await generateUniqueId();
+    }
     await User.insertMany(users);
     console.log("Multiple users created successfully");
   } catch (error) {
@@ -48,7 +52,7 @@ createMultipleUsers();
 
 const fetchUsers = async (req, res) => {
   try {
-    console.log("Fetching users...")
+    console.log("Fetching users...");
     const users = await User.find({}, "id name collections").lean();
     res.json({ users });
   } catch (error) {

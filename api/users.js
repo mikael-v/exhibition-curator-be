@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   collections: {
     type: Map,
     of: [String],
+    default: {},
   },
 });
 
@@ -147,18 +148,24 @@ const addArtworkToCollection = async (req, res) => {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    if (!user.collections[collectionName]) {
+    console.log("Collections as Map:", user.collections);
+
+    const collectionKeys = Array.from(user.collections.keys());
+    console.log("Available collections:", collectionKeys);
+
+    if (!user.collections.has(collectionName)) {
       return res
         .status(404)
         .json({ msg: `Collection '${collectionName}' not found` });
     }
 
-    const collection = user.collections[collectionName];
+    const collection = user.collections.get(collectionName);
+
     if (collection.includes(artworkId)) {
       return res.status(400).json({ msg: "Artwork already in collection" });
     }
 
-    collection.push(artworkId);
+    user.collections.set(collectionName, [...collection, artworkId]);
     await user.save();
 
     return res.status(201).json({

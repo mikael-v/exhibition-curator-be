@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  id: { type: Number, required: true, unique: true },
   name: { type: String, required: true },
   collections: {
     type: Map,
@@ -10,27 +9,14 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-userSchema.pre("save", async function (next) {
-  if (!this.id) {
-    const lastUser = await User.findOne().sort({ id: -1 }).lean();
-    this.id = lastUser ? lastUser.id + 1 : 1;
-  }
-  next();
-});
-
 const User = mongoose.model("User", userSchema);
-
-const generateUniqueId = async () => {
-  const lastUser = await User.findOne().sort({ id: -1 }).lean();
-  return lastUser ? lastUser.id + 1 : 1;
-};
 
 const createMultipleUsers = async () => {
   try {
     console.log("Deleting existing users...");
     await User.deleteMany({});
 
-    console.log("Generating unique IDs for users...");
+    console.log("Creating users with auto-generated IDs...");
 
     const users = [
       {
@@ -54,12 +40,6 @@ const createMultipleUsers = async () => {
       },
     ];
 
-    for (let user of users) {
-      user.id = await generateUniqueId();
-    }
-
-    console.log("Inserting users...");
-
     await User.insertMany(users);
     console.log("Multiple users created successfully");
   } catch (error) {
@@ -67,12 +47,10 @@ const createMultipleUsers = async () => {
   }
 };
 
-createMultipleUsers();
 
 const fetchUsers = async (req, res) => {
   try {
-    console.log("Fetching users...");
-    const users = await User.find({}, "id name collections").lean();
+    const users = await User.find({}, "_id name collections").lean();
     res.json({ users });
   } catch (error) {
     console.error("Error fetching users:", error.message);
@@ -84,7 +62,7 @@ const fetchUserCollections = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const user = await User.findOne({ id: userId }).lean();
+    const user = await User.findById(userId).lean();
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
@@ -96,8 +74,8 @@ const fetchUserCollections = async (req, res) => {
 
     const username = user.name;
     return res.json({
-      collections,
       username,
+      collections,
     });
   } catch (error) {
     console.error("Error fetching collections:", error.message);
@@ -109,7 +87,7 @@ const fetchIndividualCollections = async (req, res) => {
   const { userId, collectionName } = req.params;
 
   try {
-    const user = await User.findOne({ id: userId }).lean();
+    const user = await User.findById(userId).lean();
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
@@ -143,15 +121,12 @@ const addArtworkToCollection = async (req, res) => {
   const { artworkId } = req.body;
 
   try {
-    const user = await User.findOne({ id: userId });
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    console.log("Collections as Map:", user.collections);
-
     const collectionKeys = Array.from(user.collections.keys());
-    console.log("Available collections:", collectionKeys);
 
     if (!user.collections.has(collectionName)) {
       return res
@@ -191,7 +166,7 @@ const createNewCollection = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ id: userId });
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }

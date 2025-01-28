@@ -1,6 +1,7 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+const { Schema, model } = mongoose;
 
-const userSchema = new mongoose.Schema({
+const usersSchema = new Schema({
   name: { type: String, required: true },
   collections: {
     type: Map,
@@ -9,48 +10,27 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-const User = mongoose.model("User", userSchema);
+const Users = mongoose.model("User", usersSchema);
 
-const createMultipleUsers = async () => {
+const createUsers = async () => {
+
   try {
-    console.log("Deleting existing users...");
-    await User.deleteMany({});
+    const newUser = new Users(mockUser);
+    await newUser.save();
 
-    console.log("Creating users with auto-generated IDs...");
-
-    const users = [
-      {
-        name: "Alice",
-        collections: {
-          favourites: [],
-          modernArt: [],
-        },
-      },
-      {
-        name: "Bob",
-        collections: {
-          paintings: [],
-        },
-      },
-      {
-        name: "Charlie",
-        collections: {
-          photography: [],
-        },
-      },
-    ];
-
-    await User.insertMany(users);
-    console.log("Multiple users created successfully");
+    return res.status(201).json({
+      msg: "Mock user created successfully",
+      user: newUser,
+    });
   } catch (error) {
-    console.error("Error inserting users:", error.message);
+    console.error("Error creating mock user:", error.message);
+    res.status(500).json({ error: "Failed to create mock user" });
   }
 };
 
-
 const fetchUsers = async (req, res) => {
   try {
-    const users = await User.find({}, "_id name collections").lean();
+    const users = await Users.find({}, "_id name collections").lean();
     res.json({ users });
   } catch (error) {
     console.error("Error fetching users:", error.message);
@@ -62,7 +42,7 @@ const fetchUserCollections = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const user = await User.findById(userId).lean();
+    const user = await Users.findById(userId).lean();
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
@@ -87,7 +67,7 @@ const fetchIndividualCollections = async (req, res) => {
   const { userId, collectionName } = req.params;
 
   try {
-    const user = await User.findById(userId).lean();
+    const user = await Users.findById(userId).lean();
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
@@ -121,12 +101,10 @@ const addArtworkToCollection = async (req, res) => {
   const { artworkId } = req.body;
 
   try {
-    const user = await User.findById(userId);
+    const user = await Users.findById(userId);
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
-
-    const collectionKeys = Array.from(user.collections.keys());
 
     if (!user.collections.has(collectionName)) {
       return res
@@ -166,7 +144,7 @@ const createNewCollection = async (req, res) => {
   }
 
   try {
-    const user = await User.findById(userId);
+    const user = await Users.findById(userId);
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
@@ -190,10 +168,53 @@ const createNewCollection = async (req, res) => {
   }
 };
 
+const removeFromCollection = async (req, res) => {
+  const { userId, collectionName } = req.params;
+  const { artworkId } = req.body;
+
+  try {
+    const user = await Users.findById(userId);
+    console.log("user:", user);
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    if (!user.collections || !user.collections[collectionName]) {
+      return res
+        .status(404)
+        .json({ msg: `Collection '${collectionName}' not found` });
+    }
+
+    const collection = user.collections[collectionName];
+
+    if (!collection.includes(artworkId)) {
+      return res
+        .status(400)
+        .json({ msg: "Artwork not found in this collection" });
+    }
+
+    user.collections[collectionName] = collection.filter(
+      (artwork) => artwork !== artworkId
+    );
+
+    await user.save();
+
+    return res.status(200).json({
+      msg: `Artwork ${artworkId} removed from collection '${collectionName}'`,
+      collection: user.collections.get(collectionName),
+    });
+  } catch (error) {
+    console.error("Error removing artwork:", error.message);
+    res.status(500).json({ error: "Failed to remove artwork" });
+  }
+};
+
 module.exports = {
+  createUsers,
   fetchUsers,
   fetchUserCollections,
   fetchIndividualCollections,
   addArtworkToCollection,
   createNewCollection,
+  removeFromCollection,
 };

@@ -15,11 +15,13 @@ const { fetchArtworkById } = require("./api/individualArtwork.js");
 const { fetchArtworks } = require("./api/allArtwork.js");
 const { getAPIs } = require("./api/endpoints.js");
 const {
+  createUsers,
   fetchUsers,
   fetchUserCollections,
   fetchIndividualCollections,
   addArtworkToCollection,
   createNewCollection,
+  removeFromCollection,
 } = require("./api/users.js");
 
 app.get("/", getAPIs);
@@ -28,17 +30,23 @@ app.get("/api/artwork", fetchArtworks);
 app.get("/api/artworks", fetchArtworks);
 app.get("/api/artwork/:id", fetchArtworkById);
 app.get("/api/artworks/:id", fetchArtworkById);
+app.post("/api/users", createUsers);
 app.get("/api/users", fetchUsers);
 app.get("/api/users/:userId/collections", fetchUserCollections);
 app.get(
   "/api/users/:userId/collections/:collectionName",
   fetchIndividualCollections
 );
+app.post("/api/users", createUsers);
 app.post(
   "/api/users/:userId/collections/:collectionName",
   addArtworkToCollection
 );
 app.post("/api/users/:userId/collections", createNewCollection);
+app.delete(
+  "/api/users/:userId/:collections/:collectionName",
+  removeFromCollection
+);
 
 app.use((err, req, res, next) => {
   console.error("Error:", err.message || err);

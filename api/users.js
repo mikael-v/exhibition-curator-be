@@ -1,36 +1,6 @@
-import mongoose from "mongoose";
-const { Schema, model } = mongoose;
-
-const usersSchema = new Schema({
-  name: { type: String, required: true },
-  collections: {
-    type: Map,
-    of: [String],
-    default: {},
-  },
-});
-
-const Users = mongoose.model("User", usersSchema);
-
-const createUsers = async () => {
-
-  try {
-    const newUser = new Users(mockUser);
-    await newUser.save();
-
-    return res.status(201).json({
-      msg: "Mock user created successfully",
-      user: newUser,
-    });
-  } catch (error) {
-    console.error("Error creating mock user:", error.message);
-    res.status(500).json({ error: "Failed to create mock user" });
-  }
-};
-
 const fetchUsers = async (req, res) => {
   try {
-    const users = await Users.find({}, "_id name collections").lean();
+    const users = await users.find({}, "_id name collections").lean();
     res.json({ users });
   } catch (error) {
     console.error("Error fetching users:", error.message);
@@ -42,7 +12,7 @@ const fetchUserCollections = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const user = await Users.findById(userId).lean();
+    const user = await users.findById(userId).lean();
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
@@ -67,7 +37,7 @@ const fetchIndividualCollections = async (req, res) => {
   const { userId, collectionName } = req.params;
 
   try {
-    const user = await Users.findById(userId).lean();
+    const user = await users.findById(userId).lean();
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
@@ -105,6 +75,8 @@ const addArtworkToCollection = async (req, res) => {
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
+    console.log("user:", user);
+    console.log("collection:", user.collections);
 
     if (!user.collections.has(collectionName)) {
       return res
@@ -120,6 +92,7 @@ const addArtworkToCollection = async (req, res) => {
 
     user.collections.set(collectionName, [...collection, artworkId]);
     await user.save();
+    console.log(user);
 
     return res.status(201).json({
       msg: `Artwork ${artworkId} added to collection '${collectionName}'`,
@@ -174,6 +147,7 @@ const removeFromCollection = async (req, res) => {
 
   try {
     const user = await Users.findById(userId);
+    console.log("id:", userId);
     console.log("user:", user);
     if (!user) {
       return res.status(404).json({ msg: "User not found" });

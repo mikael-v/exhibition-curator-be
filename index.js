@@ -21,7 +21,7 @@ const {
   addArtworkToCollection,
   createNewCollection,
   removeFromCollection,
-} = require("./api/users.js");
+} = require("./api/users.js").default;
 
 app.get("/", getAPIs);
 app.get("/api", getAPIs);
@@ -39,7 +39,8 @@ app.post(
   "/api/users/:userId/collections/:collectionName",
   addArtworkToCollection
 );
-app.post("/api/users/:userId/collections", createNewCollection);
+app.post("/api/users/:userId/collections/:collectionName", createNewCollection);
+
 app.delete(
   "/api/users/:userId/:collections/:collectionName",
   removeFromCollection

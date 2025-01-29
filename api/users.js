@@ -1,6 +1,12 @@
+const connectDB = require("../db.js");
+const { ObjectId } = require("mongodb");
+
 const fetchUsers = async (req, res) => {
   try {
-    const users = await users.find({}, "_id name collections").lean();
+    const db = await connectDB();
+
+    const usersCollection = db.collection("users");
+    const users = await usersCollection.find({}).toArray();
     res.json({ users });
   } catch (error) {
     console.error("Error fetching users:", error.message);
@@ -12,7 +18,13 @@ const fetchUserCollections = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const user = await users.findById(userId).lean();
+    const db = await connectDB();
+
+    const usersCollection = db.collection("users");
+    const user = await usersCollection.findOne({
+      _id: new ObjectId(userId),
+    });
+
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
@@ -37,10 +49,12 @@ const fetchIndividualCollections = async (req, res) => {
   const { userId, collectionName } = req.params;
 
   try {
-    const user = await users.findById(userId).lean();
-    if (!user) {
-      return res.status(404).json({ msg: "User not found" });
-    }
+    const db = await connectDB();
+
+    const usersCollection = db.collection("users");
+    const user = await usersCollection.findOne({
+      _id: new ObjectId(userId),
+    });
 
     const collection = user.collections?.[collectionName];
     if (!collection) {
@@ -56,9 +70,7 @@ const fetchIndividualCollections = async (req, res) => {
     }
 
     return res.json({
-      userName: user.name,
-      collectionName: collectionName,
-      collection: collection,
+      [collectionName]: collection,
     });
   } catch (error) {
     console.error("Error fetching individual collection:", error.message);
@@ -71,28 +83,33 @@ const addArtworkToCollection = async (req, res) => {
   const { artworkId } = req.body;
 
   try {
-    const user = await Users.findById(userId);
+    const db = await connectDB();
+
+    const usersCollection = db.collection("users");
+
+    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
-    console.log("user:", user);
-    console.log("collection:", user.collections);
 
-    if (!user.collections.has(collectionName)) {
-      return res
-        .status(404)
-        .json({ msg: `Collection '${collectionName}' not found` });
+    if (user.collections[collectionName]) {
+      const collection = user.collections[collectionName];
+
+      if (collection.includes(artworkId)) {
+        return res.status(400).json({ msg: "Artwork already in collection" });
+      }
+
+      user.collections[collectionName] = collection.filter(
+        (item) => item !== ""
+      );
+
+      user.collections[collectionName].push(artworkId);
     }
 
-    const collection = user.collections.get(collectionName);
-
-    if (collection.includes(artworkId)) {
-      return res.status(400).json({ msg: "Artwork already in collection" });
-    }
-
-    user.collections.set(collectionName, [...collection, artworkId]);
-    await user.save();
-    console.log(user);
+    await usersCollection.updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { collections: user.collections } }
+    );
 
     return res.status(201).json({
       msg: `Artwork ${artworkId} added to collection '${collectionName}'`,
@@ -105,7 +122,7 @@ const addArtworkToCollection = async (req, res) => {
 };
 
 const createNewCollection = async (req, res) => {
-  const { userId } = req.params;
+  const { userId, artworkId } = req.params;
   const { collectionName } = req.body;
 
   if (
@@ -117,22 +134,27 @@ const createNewCollection = async (req, res) => {
   }
 
   try {
-    const user = await Users.findById(userId);
+    const db = await connectDB();
+    const usersCollection = db.collection("users");
+    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
 
     if (user.collections[collectionName]) {
-      return res
-        .status(400)
-        .json({ msg: `Collection '${collectionName}' already exists` });
+      return addArtworkToCollection(req, res);
     }
 
-    user.collections[collectionName] = [];
-    await user.save();
+    user.collections[collectionName] = [artworkId];
+
+    await usersCollection.updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { collections: user.collections } }
+    );
 
     return res.status(201).json({
-      msg: `Collection '${collectionName}' created successfully`,
+      msg: `Collection '${collectionName}' created and artwork '${artworkId}' added successfully`,
       collections: user.collections,
     });
   } catch (error) {
@@ -146,36 +168,26 @@ const removeFromCollection = async (req, res) => {
   const { artworkId } = req.body;
 
   try {
-    const user = await Users.findById(userId);
-    console.log("id:", userId);
-    console.log("user:", user);
+    const db = await connectDB();
+    const usersCollection = db.collection("users");
+
+    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    if (!user.collections || !user.collections[collectionName]) {
-      return res
-        .status(404)
-        .json({ msg: `Collection '${collectionName}' not found` });
-    }
-
     const collection = user.collections[collectionName];
-
-    if (!collection.includes(artworkId)) {
-      return res
-        .status(400)
-        .json({ msg: "Artwork not found in this collection" });
-    }
-
     user.collections[collectionName] = collection.filter(
       (artwork) => artwork !== artworkId
     );
 
-    await user.save();
+    await usersCollection.updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { collections: user.collections } }
+    );
 
     return res.status(200).json({
       msg: `Artwork ${artworkId} removed from collection '${collectionName}'`,
-      collection: user.collections.get(collectionName),
     });
   } catch (error) {
     console.error("Error removing artwork:", error.message);
@@ -183,7 +195,7 @@ const removeFromCollection = async (req, res) => {
   }
 };
 
-module.exports = {
+export default {
   fetchUsers,
   fetchUserCollections,
   fetchIndividualCollections,

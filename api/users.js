@@ -82,14 +82,6 @@ const addArtworkToCollection = async (req, res) => {
   const { userId, collectionName } = req.params;
   const { artworkId } = req.body;
 
-  if (
-    !collectionName ||
-    typeof collectionName !== "string" ||
-    collectionName.trim() === ""
-  ) {
-    return res.status(400).json({ msg: "Invalid collection name" });
-  }
-
   try {
     const db = await connectDB();
 
@@ -100,19 +92,19 @@ const addArtworkToCollection = async (req, res) => {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    if (!user.collections[collectionName]) {
-      user.collections[collectionName] = [];
+    if (user.collections[collectionName]) {
+      const collection = user.collections[collectionName];
+
+      if (collection.includes(artworkId)) {
+        return res.status(400).json({ msg: "Artwork already in collection" });
+      }
+
+      user.collections[collectionName] = collection.filter(
+        (item) => item !== ""
+      );
+
+      user.collections[collectionName].push(artworkId);
     }
-
-    const collection = user.collections[collectionName];
-
-    if (collection.includes(artworkId)) {
-      return res.status(400).json({ msg: "Artwork already in collection" });
-    }
-
-    user.collections[collectionName] = collection.filter((item) => item !== "");
-
-    user.collections[collectionName].push(artworkId);
 
     await usersCollection.updateOne(
       { _id: new ObjectId(userId) },

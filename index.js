@@ -35,8 +35,10 @@ app.get(
   "/api/users/:userId/collections/:collectionName",
   fetchIndividualCollections
 );
-
-app.post("/api/users/:userId/collections/:collectionName", createNewCollection);
+app.post(
+  "/api/users/:userId/collections/:collectionName",
+  addArtworkToCollection
+);
 
 app.delete(
   "/api/users/:userId/:collections/:collectionName",

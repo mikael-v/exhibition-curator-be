@@ -82,6 +82,14 @@ const addArtworkToCollection = async (req, res) => {
   const { userId, collectionName } = req.params;
   const { artworkId } = req.body;
 
+  if (
+    !collectionName ||
+    typeof collectionName !== "string" ||
+    collectionName.trim() === ""
+  ) {
+    return res.status(400).json({ msg: "Invalid collection name" });
+  }
+
   try {
     const db = await connectDB();
 
@@ -92,19 +100,19 @@ const addArtworkToCollection = async (req, res) => {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    if (user.collections[collectionName]) {
-      const collection = user.collections[collectionName];
-
-      if (collection.includes(artworkId)) {
-        return res.status(400).json({ msg: "Artwork already in collection" });
-      }
-
-      user.collections[collectionName] = collection.filter(
-        (item) => item !== ""
-      );
-
-      user.collections[collectionName].push(artworkId);
+    if (!user.collections[collectionName]) {
+      user.collections[collectionName] = [];
     }
+
+    const collection = user.collections[collectionName];
+
+    if (collection.includes(artworkId)) {
+      return res.status(400).json({ msg: "Artwork already in collection" });
+    }
+
+    user.collections[collectionName] = collection.filter((item) => item !== "");
+
+    user.collections[collectionName].push(artworkId);
 
     await usersCollection.updateOne(
       { _id: new ObjectId(userId) },
@@ -118,48 +126,6 @@ const addArtworkToCollection = async (req, res) => {
   } catch (error) {
     console.error("Error adding artwork:", error.message);
     res.status(500).json({ error: "Failed to add artwork" });
-  }
-};
-
-const createNewCollection = async (req, res) => {
-  const { userId, artworkId } = req.params;
-  const { collectionName } = req.body;
-
-  if (
-    !collectionName ||
-    typeof collectionName !== "string" ||
-    collectionName.trim() === ""
-  ) {
-    return res.status(400).json({ msg: "Invalid collection name" });
-  }
-
-  try {
-    const db = await connectDB();
-    const usersCollection = db.collection("users");
-    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
-
-    if (!user) {
-      return res.status(404).json({ msg: "User not found" });
-    }
-
-    if (user.collections[collectionName]) {
-      return addArtworkToCollection(req, res);
-    }
-
-    user.collections[collectionName] = [artworkId];
-
-    await usersCollection.updateOne(
-      { _id: new ObjectId(userId) },
-      { $set: { collections: user.collections } }
-    );
-
-    return res.status(201).json({
-      msg: `Collection '${collectionName}' created and artwork '${artworkId}' added successfully`,
-      collections: user.collections,
-    });
-  } catch (error) {
-    console.error("Error creating collection:", error.message);
-    res.status(500).json({ error: "Failed to create collection" });
   }
 };
 
@@ -200,6 +166,5 @@ export default {
   fetchUserCollections,
   fetchIndividualCollections,
   addArtworkToCollection,
-  createNewCollection,
   removeFromCollection,
 };

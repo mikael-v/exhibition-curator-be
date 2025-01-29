@@ -184,7 +184,6 @@ const removeFromCollection = async (req, res) => {
 };
 
 module.exports = {
-  createUsers,
   fetchUsers,
   fetchUserCollections,
   fetchIndividualCollections,

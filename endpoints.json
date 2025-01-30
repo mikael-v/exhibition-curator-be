@@ -1,22 +1,23 @@
 {
   "endpoints": {
-    "GET /api": {
+    "GET /": {
       "description": "serves up a json representation of all the available endpoints of the api"
     },
     "GET /artwork": {
-      "description": "serves an array of 20 different artworks, 10 from each API"
+      "description": "serves an array of 20 different artworks, 10 from each API",
+      "queries": "page, limit"
     },
     "GET /artwork/:id": {
       "description": "serves information of artwork at the given id"
     },
     "GET /api/users": {
-      "description": "serves mockUsers object containing user's names, collections and IDs"
+      "description": "serves all users object containing user's names, collections and IDs"
     },
     "GET /api/users/:userId/:collections": {
       "description": "serves all collections available for an individual user"
     },
     "GET /api/users/:userId/:collections/:collectionName": {
-      "description": "serves an individual colelction available on the user and its contents, which are either artwork IDs or a message stating there are no artworks in the collection"
+      "description": "serves an individual collection available from a user and its contents, which are either an array of artwork IDs or a message stating there are no artworks in the collection"
     }
   }
 }

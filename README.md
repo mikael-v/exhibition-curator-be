@@ -1,5 +1,11 @@
 # Exhibition Curator Backend
 
+
+
+https://github.com/user-attachments/assets/420046ff-382f-42ef-803e-fbd5ab475937
+
+
+
 This is the backend repository for the exhibition curation site. It interacts with a Mongo Atlas database and hosts it through Vercel.
 
 [Click Here for Frontend Repo](https://github.com/mikael-v/exhibition-curation)
